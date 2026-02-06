@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         LinkedIn Role Fit Checker
 // @namespace    https://tampermonkey.net/
-// @version      3.3.1
-// @description  LinkedIn: adds “Check Suitability” on SPA navigation. Prompts once for ChatGPT project URL (stored via GM_*). Opens project; ChatGPT clears composer + pastes text; no auto-send; terminates after paste.
-// @match        https://www.linkedin.com/jobs/*
+// @version      3.3.3
+// @description  LinkedIn: adds “Check Suitability” on SPA navigation (jobs/search only). Prompts once for ChatGPT project URL (stored via GM_*). Opens project; ChatGPT clears composer + pastes text; no auto-send; terminates after paste.
+// @match        https://www.linkedin.com/*
 // @match        https://chatgpt.com/*/project*
 // @grant        GM_setClipboard
 // @grant        GM_setValue
@@ -118,6 +118,11 @@
     }
   }
 
+  // IMPORTANT: runtime guard — only run LinkedIn button logic on jobs search pages
+  function isLinkedInJobsSearchPage() {
+    return location.host === "www.linkedin.com" && location.pathname.startsWith("/jobs/search");
+  }
+
   /* ================= LINKEDIN ================= */
 
   function getJobTitle() {
@@ -167,6 +172,9 @@
   }
 
   function injectButton() {
+    // Do nothing if we’re not on jobs/search (safety)
+    if (!isLinkedInJobsSearchPage()) return false;
+
     const host = qsAny([
       ".job-details-jobs-unified-top-card__job-title h1",
       ".job-details-jobs-unified-top-card__title-container h2",
@@ -238,6 +246,7 @@
   // Polling injector that stops once it succeeds (or times out), but can be restarted.
   let liPollTimer = null;
   function startLinkedInInjector(reason) {
+    if (!isLinkedInJobsSearchPage()) return;
     if (liPollTimer) return;
 
     const startedAt = Date.now();
@@ -247,6 +256,13 @@
     if (injectButton()) return;
 
     liPollTimer = setInterval(() => {
+      // Abort if we navigated away
+      if (!isLinkedInJobsSearchPage()) {
+        clearInterval(liPollTimer);
+        liPollTimer = null;
+        return;
+      }
+
       const ok = injectButton();
       const elapsed = Date.now() - startedAt;
 
@@ -268,7 +284,7 @@
   function hookLinkedInSpaNavigation() {
     let lastUrl = location.href;
 
-    // --- CHANGE #2: URL watcher stops once button is present; restarts only on navigation events ---
+    // URL watcher stops once button is present; restarts only on navigation events
     let urlWatchTimer = null;
 
     const stopUrlWatch = () => {
@@ -280,8 +296,12 @@
 
     const startUrlWatch = () => {
       if (urlWatchTimer) return;
+
       urlWatchTimer = setInterval(() => {
         if (document.hidden) return;
+
+        // Only watch when we are on jobs/search
+        if (!isLinkedInJobsSearchPage()) return;
 
         // If button is already injected, stop the watcher.
         const already = !!document.querySelector(".li-check-suitability");
@@ -300,10 +320,16 @@
       const now = location.href;
       if (now !== lastUrl) {
         lastUrl = now;
-        setTimeout(() => startLinkedInInjector("url-changed"), 300);
 
-        // Restart URL watcher on navigation (useful if LinkedIn changes URL without history events)
-        startUrlWatch();
+        // IMPORTANT: when we ENTER jobs/search via SPA from /feed,
+        // this is the moment we must arm the injector (no reload needed).
+        if (isLinkedInJobsSearchPage()) {
+          setTimeout(() => startLinkedInInjector("url-changed"), 300);
+          startUrlWatch();
+        } else {
+          // Leaving jobs/search: stop watcher to keep background cost minimal
+          stopUrlWatch();
+        }
       }
     };
 
@@ -321,21 +347,43 @@
 
     window.addEventListener("popstate", fireIfUrlChanged);
 
-    // Visibility handling remains (but watcher will usually stop once injected).
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) return;
-      // If user returns and button isn't present (fresh state), ensure watcher is running.
+    // bfcache / restore navigation
+    window.addEventListener("pageshow", (ev) => {
+      if (!isLinkedInJobsSearchPage()) return;
+
+      log("LinkedIn: pageshow (persisted=" + !!ev.persisted + ") → re-arming injector");
+      startLinkedInInjector("pageshow");
       if (!document.querySelector(".li-check-suitability")) startUrlWatch();
     });
 
-    // Start watcher initially; it will stop after injection.
-    startUrlWatch();
+    // On tab focus, re-arm if we're on jobs/search and button isn't present.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) return;
+      if (!isLinkedInJobsSearchPage()) return;
+
+      if (!document.querySelector(".li-check-suitability")) {
+        startUrlWatch();
+        startLinkedInInjector("visibilitychange");
+      }
+    });
+
+    // If we already loaded directly on jobs/search, arm immediately.
+    if (isLinkedInJobsSearchPage()) {
+      startUrlWatch();
+      startLinkedInInjector("init-direct");
+    }
   }
 
   function initLinkedIn() {
+    // IMPORTANT CHANGE: do NOT early-return here.
+    // The script must hook SPA navigation even when initially loaded on /feed/,
+    // so it can react when you navigate into /jobs/search/ without a hard refresh.
     hookLinkedInSpaNavigation();
-    startLinkedInInjector("init");
-    window.addEventListener("load", () => startLinkedInInjector("window-load"));
+
+    // If the user hard-loads directly on /jobs/search/, also arm on load.
+    window.addEventListener("load", () => {
+      if (isLinkedInJobsSearchPage()) startLinkedInInjector("window-load");
+    });
   }
 
   /* ================= CHATGPT ================= */
@@ -416,7 +464,7 @@
       return;
     }
 
-    // --- CHANGE #1: verify paste by matching payload signature (job title prefix) ---
+    // Verify paste by matching payload signature (job title prefix)
     const sig = getPayloadSignature(payload);
     log("ChatGPT: expecting signature:", sig);
 
