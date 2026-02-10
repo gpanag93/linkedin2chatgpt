@@ -21,11 +21,11 @@ With one click, it extracts the job title, location, and full job description an
 
 ## ⚠️ Disclaimer
 
-This is a **fun personal side project** built during free time.
+`IMPORTANT:
+This script modifies LinkedIn’s page locally in your browser and, while no automation or external data transmission is performed, its use could theoretically be detectable by LinkedIn and is therefore used at your own risk.`
 
-- Not production software  
-- Provided **as-is**  
-- Use at your own responsibility  
+- This is a **fun personal side project** built during free time. It's not production software  
+- Provided **as-is**   
 - LinkedIn or ChatGPT UI updates may break functionality  
 - Not affiliated with LinkedIn or OpenAI  
 
