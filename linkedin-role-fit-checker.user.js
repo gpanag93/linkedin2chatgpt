@@ -120,7 +120,7 @@
 
   // IMPORTANT: runtime guard — only run LinkedIn button logic on jobs search pages
   function isLinkedInJobsSearchPage() {
-    return location.host === "www.linkedin.com" && location.pathname.startsWith("/jobs/search");
+    return location.host === "www.linkedin.com" && (location.pathname.startsWith("/jobs/search") || location.pathname.startsWith("/jobs/collections"));
   }
 
   /* ================= LINKEDIN ================= */
