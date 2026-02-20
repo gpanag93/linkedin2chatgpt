@@ -1,33 +1,32 @@
 # LinkedIn Role Fit Checker
 
-A small userscript that adds a **"Check Suitability"** button to LinkedIn job listings.  
+A small userscript that adds a **"Check Suitability"** button to LinkedIn and Indeed job listings.  
 With one click, it extracts the job title, location, and full job description and sends it to a pre-configured ChatGPT Project for evaluation.
 
 ---
 
 ## ✨ Features
 
-- Adds a **Check Suitability** button to LinkedIn job pages
+- Adds a **Check Suitability** button to LinkedIn/Indeed job pages
 - Extracts:
   - Job title
   - Job location
   - Full job description
 - Opens your configured ChatGPT Project automatically
 - Pastes job details into the chat input
-- Does **not** auto-send messages (you stay in control)
-- Works with LinkedIn SPA navigation
+- Does **not** auto-send messages
 
 ---
 
 ## ⚠️ Disclaimer
 
 `IMPORTANT:
-This script modifies LinkedIn’s page locally in your browser and, while no automation or external data transmission is performed, its use could theoretically be detectable by LinkedIn and is therefore used at your own risk.`
+This script modifies LinkedIn/Indeed’s page locally in your browser and, while no automation or external data transmission is performed, its use could theoretically be detectable by the provider and is therefore used at your own risk.`
 
 - This is a **fun personal side project** built during free time. It's not production software  
 - Provided **as-is**   
-- LinkedIn or ChatGPT UI updates may break functionality  
-- Not affiliated with LinkedIn or OpenAI  
+- LinkedIn / Indeed or ChatGPT UI updates may break functionality  
+- Not affiliated with LinkedIn, Indeed, or OpenAI  
 
 ---
 
@@ -68,11 +67,12 @@ Restart your browser if prompted.
 
 ---
 
-## Step 2 — Install This Script
+## Step 2 — Install A Script
 
-Click the install link below:
+Choose the site you want to use:
 
-👉 **[Install LinkedIn Role Fit Checker](https://raw.githubusercontent.com/gpanag93/linkedin2chatgpt/main/linkedin-role-fit-checker.user.js)**
+- 👉 **[Install LinkedIn Role Fit Checker](https://raw.githubusercontent.com/gpanag93/linkedin2chatgpt/main/linkedin-role-fit-checker.user.js)**
+- 👉 **[Install Indeed Role Fit Checker](https://raw.githubusercontent.com/gpanag93/linkedin2chatgpt/main/indeed-role-fit-checker.user.js)**
 
 Tampermonkey should automatically open the installation screen.
 
@@ -127,6 +127,7 @@ About me:
 Before we begin evaluating roles, ask any clarifying questions that would help you better assess my suitability. Focus on questions that improve accuracy and long-term career alignment, as well as practical information about myself relevant to job search.
 ```
 
+
 Answer any follow-up questions ChatGPT asks.
 
 Your project is now ready.
@@ -135,7 +136,19 @@ Your project is now ready.
 
 # 🚀 Usage
 
+## LinkedIn
+
 1. Open a LinkedIn job listing  
+2. Click **Check Suitability** next to the job title  
+3. On first use, paste your ChatGPT Project URL when prompted  
+4. The script will:
+   - Open your ChatGPT Project
+   - Paste the job details into the chat input
+5. Review and press **Send** manually
+
+## Indeed
+
+1. Open an Indeed job listing (including opening the direct link of the job - `/viewjob`)  
 2. Click **Check Suitability** next to the job title  
 3. On first use, paste your ChatGPT Project URL when prompted  
 4. The script will:
@@ -155,15 +168,16 @@ Hold **Shift** while clicking **Check Suitability** to update the configured pro
 
 - No external servers are used  
 - All configuration is stored locally via Tampermonkey  
-- Only job data visible in LinkedIn is extracted  
+- Only job data visible in the page is extracted  
 
 ---
 
 # 🐛 Known Limitations
 
-- May break if LinkedIn or ChatGPT change UI structure  
+- May break if LinkedIn / Indeed or ChatGPT change UI structure  
 - Requires manual message submission  
-- Only works on LinkedIn job pages  
+- Only works on LinkedIn job pages (LinkedIn script)  
+- Only works on Indeed job pages (Indeed script)  
 
 ---
 
@@ -190,5 +204,3 @@ If it breaks — also expected 🙂
     <strong>Consider supporting Tampermonkey for their awesome tool ❤️</strong>
   </a>
 </p>
-
-
